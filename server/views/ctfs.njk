@@ -1,0 +1,14 @@
+{% extends "base.njk" %}
+
+{% block title %}
+CTFs - CTF Archive
+{% endblock %}
+
+{% block content %}
+<h1>CTFs</h1>
+<ul>
+  {% for ctf in ctfs %}
+  <li><a href="/ctf/{{ ctf.slug }}">{{ ctf.name }}</a></li>
+  {% endfor %}
+</ul>
+{% endblock %}

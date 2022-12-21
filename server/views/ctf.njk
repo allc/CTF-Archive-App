@@ -1,0 +1,26 @@
+{% extends "base.njk" %}
+
+{% block title %}
+{{ ctf.name }} - CTF Archive
+{% endblock %}
+
+{% block content %}
+<a href="/ctfs"><i class="bi bi-arrow-left-circle"></i> CTFs</a>
+<h1>{{ ctf.name }}</h1>
+{% if ctf.start_date %}
+  <div>
+    Start date: {{ ctf.start_date | date }}
+  </div>
+{% endif %}
+<div>
+  {% if ctf.link %}
+    <a href="{{ ctf.link }}" class="btn btn-link">Link</a>
+  {% endif %}
+  {% if ctf.ctftime_link %}
+  <a href="{{ ctf.ctftime_link }}" class="btn btn-link">On CTFtime</a>
+  {% endif %}
+</div>
+<div>
+  {{ ctf.more_info | safe }}
+</div>
+{% endblock %}

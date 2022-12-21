@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Ctf {
+  id  Int @id @default(autoincrement())
+  name  String  @db.VarChar(255)
+  slug  String  @unique @db.VarChar(255)
+  link  String? @db.VarChar(255)
+  ctftime_link  String? @db.VarChar(255)
+  start_date  DateTime? @db.Date
+  more_info String? @db.Text
+  challenges  Challenge[]
+}
+
+model Category {
+  id  Int  @id @default(autoincrement())
+  name  String  @db.VarChar(255)
+  slug  String  @unique @db.VarChar(255)
+  challenges  Challenge[]
+}
+
+model Challenge {
+  id Int @id  @default(autoincrement())
+  name  String  @db.VarChar(255)
+  slug  String  @db.VarChar(255)
+  ctf Ctf @relation(fields: [ctf_id], references: [id])
+  ctf_id  Int
+  category  Category  @relation(fields: [category_id], references: [id])
+  category_id Int
+  description String?  @db.Text
+
+  @@unique([ctf_id, slug])
+}

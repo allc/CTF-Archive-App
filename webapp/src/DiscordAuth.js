@@ -26,7 +26,10 @@ class DiscordAuth extends React.Component {
     }).then((res) => res.json())
       .then((json) => {
         localStorage.setItem('ctfarchive_token', json['token']);
-        this.props.setUser({username: json['username']});
+        this.props.setUser({
+          username: json['username'],
+          access_level: json['access_level'],
+        });
         this.setState({
           logged_in: true,
         });

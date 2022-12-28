@@ -1,7 +1,10 @@
 var express = require('express');
 var router = express.Router();
 const { PrismaClient } = require('@prisma/client');
-const { signJwt } = require('../helpers/jwt');
+const jwt = require('../helpers/jwt');
+const authMiddleware = require('../middlewares/auth');
+const normaliseString = require('../helpers/normaliseString');
+const checkUrl = require('../helpers/checkUrl');
 
 const prisma = new PrismaClient()
 
@@ -11,11 +14,14 @@ router.get('/ctfs', async function(req, res) {
       name: true,
       slug: true,
     },
+    orderBy: [
+      { start_date: { sort: 'desc', nulls: 'last'} },
+    ],
   });
   res.json(ctfs);
 });
 
-router.get('/ctf/:ctf_slug', async function(req, res) {
+router.get('/ctfs/:ctf_slug', async function(req, res) {
   let ctf_slug = req.params.ctf_slug;
   const ctf = await prisma.ctf.findUnique({
     where: {
@@ -37,9 +43,58 @@ router.get('/ctf/:ctf_slug', async function(req, res) {
   }
 });
 
+router.post('/ctfs',
+  authMiddleware.requireAuthorized,
+  authMiddleware.requireAccessLevel(3),
+  async function(req, res) {
+    let data = {
+      name: req.body['name'],
+      slug: null,
+      link: req.body['link'],
+      ctftime_link: req.body['ctftime_link'],
+      start_date: req.body['start_date'],
+      more_info: req.body['more_info'],
+    };
+    data.name = normaliseString.normalise(data.name);
+    data.slug = normaliseString.slguify(data.name);
+    if (!data.slug) {
+      res.status(400).json({message: 'Invalid name.'});
+      return;
+    }
+    let normaliseLinks = ['link', 'ctftime_link'].map(function(field) {
+      return new Promise(function(resolve, reject) {
+        data[field] = normaliseString.normalise(data[field]);
+        data[field] = (data[field]) ? data[field] : null;
+        if (data[field]) {
+        if (!checkUrl.isProtocolAllowed(data[field], ['http:', 'https:'])) {
+          reject(new Error(`Invalid ${field}`));
+        }
+      }
+      resolve();
+      });
+    });
+    let isNormaliseLinksFullfilled = null;
+    await Promise.all(normaliseLinks).then(() => {
+      isNormaliseLinksFullfilled = true;
+    }).catch((reason) => {
+      res.status(400).json({message: `${reason.message}.`});
+      isNormaliseLinksFullfilled = false;
+    });
+    if (!isNormaliseLinksFullfilled) {
+      return;
+    }
+    ['start_date', 'more_info'].forEach(field => {
+      data[field] = (data[field]) ? data[field] : null;
+    });
+    await prisma.ctf.create({
+      data: data,
+    });
+    res.json({message: 'Success.'});
+  }
+);
+
 router.post('/auth/discord', async function(req, res) {
   const discord_token = req.body['token'];
-  console.log(discord_token);
   fetch(process.env.DISCORD_API_ENDPOINT + '/users/@me', {
     headers: {
       'Authorization': 'Bearer ' + discord_token,
@@ -73,10 +128,19 @@ router.post('/auth/discord', async function(req, res) {
         })
       }
       res.json({
-        token: signJwt({user_id: user.id}),
+        token: jwt.sign({user_id: user.id}),
         username: user.username,
+        access_level: user['access_level'],
       });
     });
+});
+
+router.get('/auth/user', authMiddleware.requireAuthorized, async function(req, res) {
+  const user = req.user;
+  res.json({
+    username: user['username'],
+    access_level: user['access_level'],
+  });
 });
 
 module.exports = router;

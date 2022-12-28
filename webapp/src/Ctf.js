@@ -31,7 +31,7 @@ class Ctf extends React.Component {
   }
 
   get_ctf() {
-    fetch(config.api_endpoint + '/ctf/' + this.props.slug)
+    fetch(config.api_endpoint + '/ctfs/' + this.props.slug)
       .then((res) => res.json())
       .then((json) => {
         this.setState({
@@ -44,9 +44,12 @@ class Ctf extends React.Component {
     let ctf = this.state.ctf;
     if (ctf) {
       document.title = this.state.ctf.name + ' - CTF Archive';
-      let more_info = marked.parse(ctf.more_info);
-      more_info = DOMPurify.sanitize(more_info);
-      const more_info_html = {__html: more_info};
+      let more_info_html = null;
+      if (ctf.more_info) {
+        let more_info = marked.parse(ctf.more_info);
+        more_info = DOMPurify.sanitize(more_info);
+        more_info_html = {__html: more_info};
+      }
       return (
         <>
           <h1>{ ctf.name }</h1>

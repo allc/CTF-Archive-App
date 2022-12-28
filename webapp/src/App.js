@@ -4,6 +4,7 @@ import CtfPage from './Ctf';
 import TopBar from './TopBar';
 import DiscordAuth from './DiscordAuth';
 import React from 'react';
+import { createTheme, ThemeProvider } from '@mui/material';
 
 class App extends React.Component {
   constructor(props) {
@@ -23,17 +24,18 @@ class App extends React.Component {
   }
 
   render() {
+    const theme = createTheme();
     return (
-      <>
+      <ThemeProvider theme={theme}>
         <TopBar user={this.state.user} setUser={this.setUser} />
         <Router>
-        <Routes>
-          <Route path='/ctfs' element={<Ctfs />} />
-          <Route path='/ctf/:slug' element={<CtfPage />}/>
-          <Route path='/auth/discord' element={<DiscordAuth setUser={this.setUser} />} />
-        </Routes>
-      </Router>
-      </>
+          <Routes>
+            <Route path='/ctfs' element={<Ctfs user={this.state.user}/>} />
+            <Route path='/ctfs/:slug' element={<CtfPage />}/>
+            <Route path='/auth/discord' element={<DiscordAuth setUser={this.setUser} />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
     );
   }
 }

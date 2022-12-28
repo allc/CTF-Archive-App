@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import './Ctfs'
 import { config } from './config';
 import React from 'react';
@@ -7,8 +7,15 @@ class TopBar extends React.Component {
   constructor(props) {
     super(props);
 
-    if (localStorage.getItem('ctfarchive_token')) {
-      
+    const token = localStorage.getItem('ctfarchive_token');
+    if (token) {
+      fetch(config.api_endpoint + '/auth/user',{
+        headers: {
+          'Authentication': 'Bearer ' + token
+        }
+      }).then((res) => res.json()).then(
+        (json) => this.props.setUser(json)
+      );
     }
 
     this.handleLogoutButton = this.handleLogoutButton.bind(this);
@@ -23,8 +30,14 @@ class TopBar extends React.Component {
     if (this.props.user) {
       return (
         <div>
-          Logged in as {this.props.user.username}
-          <Button variant="outlined" onClick={this.handleLogoutButton}>Logout</Button>
+          <Box component="span" sx={{
+            m: 1,
+          }}>
+            Logged in as {this.props.user.username}
+          </Box>
+          <Button variant="outlined" onClick={this.handleLogoutButton} sx={{
+            m: 1,
+          }}>Logout</Button>
         </div>
       )
     } else {

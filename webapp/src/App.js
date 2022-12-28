@@ -31,7 +31,7 @@ class App extends React.Component {
         <Router>
           <Routes>
             <Route path='/ctfs' element={<Ctfs user={this.state.user}/>} />
-            <Route path='/ctfs/:slug' element={<CtfPage />}/>
+            <Route path='/ctfs/:slug' element={<CtfPage user={this.state.user} />}/>
             <Route path='/auth/discord' element={<DiscordAuth setUser={this.setUser} />} />
           </Routes>
         </Router>

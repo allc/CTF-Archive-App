@@ -22,7 +22,7 @@ class Ctfs extends React.Component {
       (res) => res.json()
     ).then((json) => {
       this.setState({
-        ctfs: json,
+        ctfs: json['ctfs'],
       });
     });
   }
@@ -64,10 +64,10 @@ class AddCtf extends React.Component {
         }}>
           <CardContent>
             <TextField name="ctfname" label="CTF Name" required />
-            <TextField name="link" label="Link" />
-            <TextField name="ctftimeLink" label="CTFtime Link" />
-            <TextField name="startDate" type="date" label="Start Date" />
-            <TextField name="moreInfo" label="More Info" multiline rows={2} fullWidth sx={{
+            <TextField type="url" name="link" label="Link" />
+            <TextField type="url" name="ctftimeLink" label="CTFtime Link" />
+            <TextField type="date" name="startDate" label="Start Date" InputLabelProps={{ shrink: true }} />
+            <TextField name="moreInfo" label="More Info" helperText="Markdown is supported." multiline minRows={2} fullWidth sx={{
               display: 'block',
             }}/>
           </CardContent>

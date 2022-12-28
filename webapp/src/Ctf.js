@@ -1,6 +1,6 @@
 import React from "react";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Button } from "@mui/material";
+import { Autocomplete, Button, Card, CardActions, CardContent, Chip, TextField } from "@mui/material";
 import { config } from "./config";
 import { useParams } from "react-router-dom";
 import { marked } from "marked";
@@ -11,11 +11,124 @@ function CtfPage(props) {
   return (
     <>
       <div>
-      <Button href='/ctfs'><ArrowBackIcon />CTFs</Button>
+        <Button href='/ctfs'><ArrowBackIcon />CTFs</Button>
       </div>
       <Ctf slug={slug} />
+      <Challenges user={props.user} />
     </>
   );
+}
+
+class Challenges extends React.Component {
+  render() {
+    return (
+      <>
+        <AddChallenge user={this.props.user} />
+      </>
+    )
+  }
+}
+
+class AddChallenge extends React.Component {
+  constructor(props) {
+    super(props);
+    this.FAILED_TO_LOAD_MESSAGE = 'Failed to load.';
+    this.state = {
+      adding_challenge: false,
+      categories: null,
+    }
+    this.handleAddChallengeButton = this.handleAddChallengeButton.bind(this)
+    // this.handleAddCtfSubmit = this.handleAddCtfSubmit.bind(this)
+  }
+
+  render() {
+    const canAddChallenge = this.props.user &&
+    this.props.user.access_level >= 3
+    if (!this.state.adding_challenge && canAddChallenge) {
+      return <Button variant="contained" onClick={this.handleAddChallengeButton}>Add Challenge</Button>
+    }
+    if (this.state.adding_challenge && canAddChallenge) {
+      const LOADING_MESSAGE = 'Loading...';
+      let categories = [LOADING_MESSAGE];
+      if (this.state.categories) {
+        categories = this.state.categories;
+      }
+      let tags = [LOADING_MESSAGE];
+      if (this.state.tags) {
+        tags = this.state.tags;
+      }
+      return(
+        <Card component="form" onSubmit={this.handleAddCtfSubmit} sx={{
+          m: 1,
+          '& .MuiTextField-root': {
+            m: 1,
+          },
+        }}>
+          <CardContent>
+            <TextField name="challengename" label="Challenge Name" required />
+            <Autocomplete freeSolo selectOnFocus options={categories}
+              getOptionDisabled={
+                (option) => option === LOADING_MESSAGE || option === this.FAILED_TO_LOAD_MESSAGE
+              }
+              renderInput={
+                (params) => <TextField {...params} label="Category" />
+              }
+            />
+            <Autocomplete multiple options={tags} freeSolo
+              getOptionDisabled={
+                (option) => option === LOADING_MESSAGE || option === this.FAILED_TO_LOAD_MESSAGE
+              }
+              renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                  <Chip variant="outlined" label={option} {...getTagProps({ index})} />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Tags" />
+              )}
+            />
+            <TextField name="description" label="Description" helperText="Markdown is supported." multiline minRows={2} fullWidth sx={{
+              display: 'block',
+            }}/>
+            <TextField name="flag" label="Flag" />
+          </CardContent>
+          <CardActions sx={{
+            display: 'block',
+          }}>
+            {this.state.add_ctf_error &&
+              <></>
+            }
+            <div style={{
+              width: '100%',
+              display: 'block'
+            }}>
+              <Button variant="contained" type="submit">Add</Button>
+            </div>
+          </CardActions>
+        </Card>
+      );
+    }
+  }
+
+  handleAddChallengeButton() {
+    if (!this.state.categories || this.state.categories[0] === this.FAILED_TO_LOAD_MESSAGE) {
+      fetch(config.api_endpoint + '/categories').then(
+        (res) => res.json()
+      ).then((json) => {
+        const categories = json['categories'].map((category) => category['name']);
+        this.setState({
+          categories: categories,
+        })
+      }).catch(() => {
+        this.setState({
+          categories: [this.FAILED_TO_LOAD_MESSAGE],
+        });
+      });
+    }
+    this.setState({
+      adding_challenge: true,
+    })
+  }
 }
 
 class Ctf extends React.Component {
@@ -50,11 +163,17 @@ class Ctf extends React.Component {
         more_info = DOMPurify.sanitize(more_info);
         more_info_html = {__html: more_info};
       }
+      let start_date = new Date(ctf.start_date);
+      start_date = start_date.toLocaleDateString('en-GB', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
       return (
         <>
           <h1>{ ctf.name }</h1>
           {ctf.start_date &&
-            <div>Start date: {ctf.start_date}</div>
+            <div>Start date: {start_date}</div>
           }
           <div>
             {ctf.link &&

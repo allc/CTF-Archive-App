@@ -18,7 +18,7 @@ router.get('/ctfs', async function(req, res) {
       { start_date: { sort: 'desc', nulls: 'last'} },
     ],
   });
-  res.json(ctfs);
+  res.json({ctfs: ctfs});
 });
 
 router.get('/ctfs/:ctf_slug', async function(req, res) {
@@ -92,6 +92,32 @@ router.post('/ctfs',
     res.json({message: 'Success.'});
   }
 );
+
+router.post('/challenges',
+  authMiddleware.requireAuthorized,
+  authMiddleware.requireAccessLevel(3),
+  async function(req, res) {
+    let data = {
+      name: req.body['name'],
+      slug: req.body['slug'],
+      ctf_id: null,
+      category_id: null,
+      description: req.body['description'],
+    }
+  }
+);
+
+router.get('/categories', async function(req, res) {
+  const categories = await prisma.category.findMany({
+    select: {
+      name: true,
+    },
+    orderBy: [
+      { name: 'desc' },
+    ],
+  });
+  res.json({categories: categories});
+});
 
 router.post('/auth/discord', async function(req, res) {
   const discord_token = req.body['token'];

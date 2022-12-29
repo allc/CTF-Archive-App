@@ -48,7 +48,9 @@ class AddChallenge extends React.Component {
       return <Button variant="contained" onClick={this.handleAddChallengeButton}>Add Challenge</Button>
     }
     if (this.state.adding_challenge && canAddChallenge) {
+      // show form
       const LOADING_MESSAGE = 'Loading...';
+      // populate categories and tags once loaded
       let categories = [LOADING_MESSAGE];
       if (this.state.categories) {
         categories = this.state.categories;
@@ -57,6 +59,7 @@ class AddChallenge extends React.Component {
       if (this.state.tags) {
         tags = this.state.tags;
       }
+      // render form
       return(
         <Card component="form" onSubmit={this.handleAddCtfSubmit} sx={{
           m: 1,
@@ -111,6 +114,7 @@ class AddChallenge extends React.Component {
   }
 
   handleAddChallengeButton() {
+    // fetch categories
     if (!this.state.categories || this.state.categories[0] === this.FAILED_TO_LOAD_MESSAGE) {
       fetch(config.api_endpoint + '/categories').then(
         (res) => res.json()
@@ -125,6 +129,22 @@ class AddChallenge extends React.Component {
         });
       });
     }
+    // fetch tags
+    if (!this.state.tags || this.state.tags[0] === this.FAILED_TO_LOAD_MESSAGE) {
+      fetch(config.api_endpoint + '/tags').then(
+        (res) => res.json()
+      ).then((json) => {
+        const tags = json['tags'].map((category) => tags['name']);
+        this.setState({
+          tags: tags,
+        })
+      }).catch(() => {
+        this.setState({
+          tags: [this.FAILED_TO_LOAD_MESSAGE],
+        });
+      });
+    }
+    // change state to display form
     this.setState({
       adding_challenge: true,
     })

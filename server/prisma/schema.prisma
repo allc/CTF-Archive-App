@@ -38,8 +38,17 @@ model Challenge {
   category  Category  @relation(fields: [category_id], references: [id])
   category_id Int
   description String?  @db.Text
+  flag  String?  @db.VarChar(255)
+  tags  Tag[]
 
   @@unique([ctf_id, slug])
+}
+
+model Tag {
+  id  Int @id @default(autoincrement())
+  name  String  @db.VarChar(255)
+  slug  String  @unique  @db.VarChar(255)
+  challenges  Challenge[]
 }
 
 model User {

@@ -63,8 +63,7 @@ router.post('/ctfs',
     }
     let normaliseLinks = ['link', 'ctftime_link'].map(function(field) {
       return new Promise(function(resolve, reject) {
-        data[field] = normaliseString.normalise(data[field]);
-        data[field] = (data[field]) ? data[field] : null;
+        data[field] = normaliseString.normaliseOrNull(data[field]);
         if (data[field]) {
         if (!checkUrl.isProtocolAllowed(data[field], ['http:', 'https:'])) {
           reject(new Error(`Invalid ${field}`));
@@ -97,13 +96,16 @@ router.post('/challenges',
   authMiddleware.requireAuthorized,
   authMiddleware.requireAccessLevel(3),
   async function(req, res) {
-    let data = {
+    let challengeData = {
       name: req.body['name'],
-      slug: req.body['slug'],
+      slug: null,
       ctf_id: null,
       category_id: null,
       description: req.body['description'],
+      flag: req.body['flag'],
     }
+    challengeData.name = normaliseString.normalise(challengeData.name);
+
   }
 );
 
@@ -113,10 +115,22 @@ router.get('/categories', async function(req, res) {
       name: true,
     },
     orderBy: [
-      { name: 'desc' },
+      { name: 'asc' },
     ],
   });
   res.json({categories: categories});
+});
+
+router.get('/tags', async function(req, res) {
+  const tags = await prisma.tag.findMany({
+    select: {
+      name: true,
+    },
+    orderBy: [
+      { name: 'asc' },
+    ],
+  });
+  res.json({tags: tags});
 });
 
 router.post('/auth/discord', async function(req, res) {

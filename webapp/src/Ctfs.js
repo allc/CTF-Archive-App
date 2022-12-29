@@ -1,7 +1,8 @@
-import { Button, Card, CardActions, CardContent, TextField, useTheme } from "@mui/material";
+import { Button, Card, CardActions, CardContent, TextField } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
 import { config } from "./config";
+import FormErrorMessage from "./FormErrorMessage";
 
 class Ctfs extends React.Component {
   constructor(props) {
@@ -75,7 +76,7 @@ class AddCtf extends React.Component {
             display: 'block',
           }}>
             {this.state.add_ctf_error &&
-              <AddCtfErrorMessage error_message={this.state.add_ctf_error} />
+              <FormErrorMessage errorMessage={this.state.add_ctf_error} />
             }
             <div style={{
               width: '100%',
@@ -127,19 +128,6 @@ class AddCtf extends React.Component {
       }
     });
   }
-}
-
-function AddCtfErrorMessage(props) {
-  const theme = useTheme();
-  return (
-    <div style={{
-      width: '100%',
-      display: 'block',
-      color: theme.palette.error.main,
-    }}>
-      {props.error_message}
-    </div>
-  );
 }
 
 class CtfsList extends React.Component {

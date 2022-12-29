@@ -10,6 +10,8 @@ function normaliseOrNull(s) {
 function slguify(s) {
   return normalise(s).toLowerCase().replace(
     /[\W_]+/g, '-'
+  ).replace(
+    /^-+|-+$/g, ''
   );
 }
 

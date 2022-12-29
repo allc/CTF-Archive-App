@@ -5,6 +5,7 @@ import { config } from "./config";
 import { useParams } from "react-router-dom";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import FormErrorMessage from "./FormErrorMessage";
 
 function CtfPage(props) {
   const { slug } = useParams();
@@ -14,7 +15,7 @@ function CtfPage(props) {
         <Button href='/ctfs'><ArrowBackIcon />CTFs</Button>
       </div>
       <Ctf slug={slug} />
-      <Challenges user={props.user} />
+      <Challenges user={props.user} ctfSlug={slug} />
     </>
   );
 }
@@ -23,7 +24,7 @@ class Challenges extends React.Component {
   render() {
     return (
       <>
-        <AddChallenge user={this.props.user} />
+        <AddChallenge user={this.props.user} ctfSlug={this.props.ctfSlug} />
       </>
     )
   }
@@ -36,9 +37,12 @@ class AddChallenge extends React.Component {
     this.state = {
       adding_challenge: false,
       categories: null,
+      tags: null,
+      selected_tags: null,
+      add_challenge_error: null,
     }
     this.handleAddChallengeButton = this.handleAddChallengeButton.bind(this)
-    // this.handleAddCtfSubmit = this.handleAddCtfSubmit.bind(this)
+    this.handleAddChallengeSubmit = this.handleAddChallengeSubmit.bind(this)
   }
 
   render() {
@@ -61,7 +65,7 @@ class AddChallenge extends React.Component {
       }
       // render form
       return(
-        <Card component="form" onSubmit={this.handleAddCtfSubmit} sx={{
+        <Card component="form" onSubmit={this.handleAddChallengeSubmit} sx={{
           m: 1,
           '& .MuiTextField-root': {
             m: 1,
@@ -74,7 +78,7 @@ class AddChallenge extends React.Component {
                 (option) => option === LOADING_MESSAGE || option === this.FAILED_TO_LOAD_MESSAGE
               }
               renderInput={
-                (params) => <TextField {...params} label="Category" />
+                (params) => <TextField {...params} name="category" label="Category" required />
               }
             />
             <Autocomplete multiple options={tags} freeSolo
@@ -89,6 +93,11 @@ class AddChallenge extends React.Component {
               renderInput={(params) => (
                 <TextField {...params} label="Tags" />
               )}
+              onChange={(event, newValue) => {
+                this.setState({
+                  selected_tags: newValue,
+                });
+              }}
             />
             <TextField name="description" label="Description" helperText="Markdown is supported." multiline minRows={2} fullWidth sx={{
               display: 'block',
@@ -98,8 +107,8 @@ class AddChallenge extends React.Component {
           <CardActions sx={{
             display: 'block',
           }}>
-            {this.state.add_ctf_error &&
-              <></>
+            {this.state.add_challenge_error &&
+              <FormErrorMessage errorMessage={this.state.add_challenge_error} />
             }
             <div style={{
               width: '100%',
@@ -113,37 +122,66 @@ class AddChallenge extends React.Component {
     }
   }
 
+  handleAddChallengeSubmit(event) {
+    event.preventDefault();
+    const token = localStorage.getItem('ctfarchive_token');
+    fetch(config.api_endpoint + '/challenges',{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authentication': 'Bearer ' + token,
+      },
+      body: JSON.stringify({
+        name: event.target.challengename.value,
+        category: event.target.category.value,
+        tags: this.state.selected_tags,
+        description: event.target.description.value,
+        flag: event.target.flag.value,
+        ctf_slug: this.props.ctfSlug,
+      }),
+    }).then(
+      (res) => res.json()
+    ).then((json) => {
+      if (json.message === 'Success.') {
+        this.setState({
+          adding_challenge: false,
+          add_challenge_error: null,
+        });
+      } else {
+        this.setState({
+          add_challenge_error: json.message,
+        })
+      }
+    });
+  }
+
   handleAddChallengeButton() {
     // fetch categories
-    if (!this.state.categories || this.state.categories[0] === this.FAILED_TO_LOAD_MESSAGE) {
-      fetch(config.api_endpoint + '/categories').then(
-        (res) => res.json()
-      ).then((json) => {
-        const categories = json['categories'].map((category) => category['name']);
-        this.setState({
-          categories: categories,
-        })
-      }).catch(() => {
-        this.setState({
-          categories: [this.FAILED_TO_LOAD_MESSAGE],
-        });
+    fetch(config.api_endpoint + '/categories').then(
+      (res) => res.json()
+    ).then((json) => {
+      const categories = json['categories'].map((category) => category['name']);
+      this.setState({
+        categories: categories,
+      })
+    }).catch(() => {
+      this.setState({
+        categories: [this.FAILED_TO_LOAD_MESSAGE],
       });
-    }
+    });
     // fetch tags
-    if (!this.state.tags || this.state.tags[0] === this.FAILED_TO_LOAD_MESSAGE) {
-      fetch(config.api_endpoint + '/tags').then(
-        (res) => res.json()
-      ).then((json) => {
-        const tags = json['tags'].map((category) => tags['name']);
-        this.setState({
-          tags: tags,
-        })
-      }).catch(() => {
-        this.setState({
-          tags: [this.FAILED_TO_LOAD_MESSAGE],
-        });
+    fetch(config.api_endpoint + '/tags').then(
+      (res) => res.json()
+    ).then((json) => {
+      const tags = json['tags'].map((tag) => tag['name']);
+      this.setState({
+        tags: tags,
+      })
+    }).catch(() => {
+      this.setState({
+        tags: [this.FAILED_TO_LOAD_MESSAGE],
       });
-    }
+    });
     // change state to display form
     this.setState({
       adding_challenge: true,

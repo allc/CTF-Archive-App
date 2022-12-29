@@ -96,16 +96,78 @@ router.post('/challenges',
   authMiddleware.requireAuthorized,
   authMiddleware.requireAccessLevel(3),
   async function(req, res) {
+    // challenge data
     let challengeData = {
       name: req.body['name'],
       slug: null,
-      ctf_id: null,
-      category_id: null,
       description: req.body['description'],
       flag: req.body['flag'],
     }
     challengeData.name = normaliseString.normalise(challengeData.name);
-
+    challengeData.slug = normaliseString.slguify(challengeData.name);
+    console.log(challengeData.slug);
+    if (!challengeData.slug) {
+      res.status(400).json({message: 'Invalid name.'});
+      return;
+    }
+    challengeData.description = normaliseString.normaliseOrNull(challengeData.description);
+    challengeData.flag = normaliseString.normaliseOrNull(challengeData.flag);
+    // category data
+    let categoryData = {
+      name: req.body['category'],
+      slug: null,
+    };
+    categoryData.name = normaliseString.normalise(categoryData.name);
+    categoryData.slug = normaliseString.slguify(categoryData.name);
+    if (!categoryData.slug) {
+      res.status(400).json({message: 'Invalid category.'});
+      return;
+    }
+    // tags
+    let tags = req.body['tags'];
+    tags = tags.map((tag) => normaliseString.normalise(tag));
+    tagSlugs = tags.map((tag) => normaliseString.slguify(tag));
+    if (tagSlugs.some((tagSlug) => !tagSlug)) {
+      res.status(400).json({message: 'Invalid tag.'});
+      return;
+    }
+    const tagsConnectOrCreate = tags.map((tag, i) => {
+      return {
+        where: {
+          slug: tagSlugs[i],
+        },
+        create: {
+          name: tag,
+          slug: tagSlugs[i],
+        }
+      };
+    });
+    // write to database
+    await prisma.challenge.create({
+      data: {
+        name: challengeData.name,
+        slug: challengeData.slug,
+        ctf: {
+          connect: {
+            slug: req.body['ctf_slug']
+          }
+        },
+        category: {
+          connectOrCreate: {
+            where: {
+              slug: categoryData.slug
+            },
+            create: categoryData,
+          }
+        },
+        description: challengeData.description,
+        flag: challengeData.flag,
+        tags: {
+          connectOrCreate: tagsConnectOrCreate
+        },
+      }
+    });
+    res.json({message: 'Success.'});
   }
 );
 

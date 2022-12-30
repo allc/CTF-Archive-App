@@ -1,6 +1,6 @@
 import { Box, Button } from '@mui/material';
-import './Ctfs'
-import { config } from './config';
+import '../Ctfs'
+import { config } from '../config';
 import React from 'react';
 
 class TopBar extends React.Component {

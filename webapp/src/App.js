@@ -1,7 +1,7 @@
 import { BrowserRouter as Router , Routes, Route } from 'react-router-dom';
 import Ctfs from './Ctfs';
 import CtfPage from './Ctf';
-import TopBar from './TopBar';
+import TopBar from './components/TopBar';
 import DiscordAuth from './DiscordAuth';
 import React from 'react';
 import { createTheme, ThemeProvider } from '@mui/material';

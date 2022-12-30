@@ -1,11 +1,12 @@
 import React from "react";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Autocomplete, Button, Card, CardActions, CardContent, Chip, TextField } from "@mui/material";
+import { Autocomplete, Button, Card, CardActions, CardContent, Chip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
 import { config } from "./config";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import FormErrorMessage from "./FormErrorMessage";
+import FormErrorMessage from "./components/FormErrorMessage";
+import { formatDateStringOrNull } from "./utils/formatDateString";
 
 function CtfPage(props) {
   const { slug } = useParams();
@@ -23,11 +24,20 @@ function CtfPage(props) {
 class Challenges extends React.Component {
   render() {
     return (
-      <>
+      <div>
         <AddChallenge user={this.props.user} ctfSlug={this.props.ctfSlug} />
-      </>
+        <ChallengesDisplay />
+      </div>
     )
   }
+}
+
+function ChallengesDisplay(props) {
+  return (
+    <div>
+      
+    </div>
+  );
 }
 
 class AddChallenge extends React.Component {
@@ -221,12 +231,7 @@ class Ctf extends React.Component {
         more_info = DOMPurify.sanitize(more_info);
         more_info_html = {__html: more_info};
       }
-      let start_date = new Date(ctf.start_date);
-      start_date = start_date.toLocaleDateString('en-GB', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      const start_date = formatDateStringOrNull(ctf.start_date);
       return (
         <>
           <h1>{ ctf.name }</h1>

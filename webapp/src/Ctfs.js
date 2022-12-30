@@ -1,8 +1,9 @@
-import { Button, Card, CardActions, CardContent, TextField } from "@mui/material";
+import { Button, Card, CardActions, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
 import { config } from "./config";
-import FormErrorMessage from "./FormErrorMessage";
+import FormErrorMessage from "./components/FormErrorMessage";
+import { formatDateString, formatDateStringOrNull } from "./utils/formatDateString";
 
 class Ctfs extends React.Component {
   constructor(props) {
@@ -30,11 +31,11 @@ class Ctfs extends React.Component {
 
   render() {
     return (
-      <>
+      <div>
         <h1>CTFs</h1>
         <AddCtf user={this.props.user} update_ctfs={this.update_ctfs} />
-        <CtfsList ctfs={this.state.ctfs} />
-      </>
+        <CtfsTable ctfs={this.state.ctfs} />
+      </div>
     );
   }
 }
@@ -130,26 +131,36 @@ class AddCtf extends React.Component {
   }
 }
 
-class CtfsList extends React.Component {
+class CtfsTable extends React.Component {
   render() {
     return (
-      <ul>
-        {
-          this.props.ctfs.map(
-            (ctf) => <CtfsListItem key={ ctf.slug } ctf={ ctf } />
-          )
-        }
-      </ul>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>CTF</TableCell>
+              <TableCell>Start date</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {this.props.ctfs.map((ctf) => (
+              <CtfsTableRow key={ctf.slug} ctf={ctf} />
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     );
   }
 }
 
-function CtfsListItem(props) {
-  let linkTo = '/ctfs/' + props.ctf.slug;
+function CtfsTableRow(props) {
+  const linkTo = '/ctfs/' + props.ctf.slug;
+  const startDate = formatDateStringOrNull(props.ctf.start_date);
   return (
-    <li>
-      <Link to={ linkTo }>{ props.ctf.name }</Link>
-    </li>
+    <TableRow>
+      <TableCell><Link to={linkTo}>{props.ctf.name}</Link></TableCell>
+      <TableCell>{startDate}</TableCell>
+    </TableRow>
   );
 }
 

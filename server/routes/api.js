@@ -13,34 +13,13 @@ router.get('/ctfs', async function(req, res) {
     select: {
       name: true,
       slug: true,
+      start_date: true,
     },
     orderBy: [
       { start_date: { sort: 'desc', nulls: 'last'} },
     ],
   });
   res.json({ctfs: ctfs});
-});
-
-router.get('/ctfs/:ctf_slug', async function(req, res) {
-  let ctf_slug = req.params.ctf_slug;
-  const ctf = await prisma.ctf.findUnique({
-    where: {
-      slug: ctf_slug
-    },
-    select: {
-      name: true,
-      slug: true,
-      link: true,
-      ctftime_link: true,
-      start_date: true,
-      more_info: true,
-    }
-  });
-  if (ctf) {
-    res.json(ctf);
-  } else {
-    res.status(404).json({message: 'CTF not found.'});
-  }
 });
 
 router.post('/ctfs',
@@ -92,6 +71,64 @@ router.post('/ctfs',
   }
 );
 
+router.get('/ctfs/:ctf_slug', async function(req, res) {
+  let ctf_slug = req.params.ctf_slug;
+  const ctf = await prisma.ctf.findUnique({
+    where: {
+      slug: ctf_slug
+    },
+    select: {
+      name: true,
+      slug: true,
+      link: true,
+      ctftime_link: true,
+      start_date: true,
+      more_info: true,
+    }
+  });
+  if (ctf) {
+    res.json(ctf);
+  } else {
+    res.status(404).json({message: 'CTF not found.'});
+  }
+});
+
+router.get('/challenges', async function(req, res) {
+  let ctfString = req.query.ctf;
+  ctfString = (ctfString) ? ctfString : undefined;
+  const challenges = await prisma.challenge.findMany({
+    where: {
+      ctf: {
+        slug: ctfString,
+      }
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      ctf: {
+        select: {
+          name: true,
+          slug: true,
+        }
+      },
+      category: {
+        select: {
+          name: true,
+          slug: true,
+        }
+      },
+      tags: {
+        select: {
+          name: true,
+          slug: true,
+        }
+      },
+    }
+  });
+  res.json({challenges: challenges});
+});
+
 router.post('/challenges',
   authMiddleware.requireAuthorized,
   authMiddleware.requireAccessLevel(3),
@@ -125,8 +162,11 @@ router.post('/challenges',
     }
     // tags
     let tags = req.body['tags'];
+    if (!tags) {
+      tags = []
+    }
     tags = tags.map((tag) => normaliseString.normalise(tag));
-    tagSlugs = tags.map((tag) => normaliseString.slguify(tag));
+    const tagSlugs = tags.map((tag) => normaliseString.slguify(tag));
     if (tagSlugs.some((tagSlug) => !tagSlug)) {
       res.status(400).json({message: 'Invalid tag.'});
       return;

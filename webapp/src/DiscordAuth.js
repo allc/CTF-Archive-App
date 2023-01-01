@@ -11,29 +11,32 @@ class DiscordAuth extends React.Component {
     };
   }
 
-  componentDidMount() {
-    const params = new URLSearchParams(window.location.hash.substring(1));
-    const discord_token = params.get('access_token');
+  async componentDidMount() {
+    const params = new URLSearchParams(window.location.search.substring(1));
+    const code = params.get('code');
     const body = {
-      token: discord_token,
+      code: code,
     };
-    fetch(config.api_endpoint + '/auth/discord', {
+    const res = await fetch(config.api_endpoint + '/auth/discord', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
-    }).then((res) => res.json())
-      .then((json) => {
-        localStorage.setItem('ctfarchive_token', json['token']);
-        this.props.setUser({
-          username: json['username'],
-          access_level: json['access_level'],
-        });
-        this.setState({
-          logged_in: true,
-        });
+    });
+    if (!res.ok) {
+      return;
+    }
+    res.json().then((json) => {
+      localStorage.setItem('ctfarchive_token', json['token']);
+      this.props.setUser({
+        username: json['username'],
+        access_level: json['access_level'],
       });
+      this.setState({
+        logged_in: true,
+      });
+    });
   }
 
   render() {

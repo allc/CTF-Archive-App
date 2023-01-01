@@ -41,7 +41,7 @@ class TopBar extends React.Component {
         </div>
       )
     } else {
-      const discord_oauth2_url = 'https://discord.com/api/oauth2/authorize?client_id=' + config.discord_client_id + '&redirect_uri=' + encodeURIComponent(config.discord_redirect_url) + '&response_type=token&scope=identify';
+      const discord_oauth2_url = 'https://discord.com/api/oauth2/authorize?client_id=' + config.discord_client_id + '&redirect_uri=' + encodeURIComponent(config.discord_redirect_url) + '&response_type=code&scope=identify';
       return (
         <Button href={discord_oauth2_url}>Login with Discord</Button>
       );

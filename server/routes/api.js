@@ -291,45 +291,67 @@ router.get('/tags', async function(req, res) {
 });
 
 router.post('/auth/discord', async function(req, res) {
-  const discord_token = req.body['token'];
-  fetch(process.env.DISCORD_API_ENDPOINT + '/users/@me', {
+  const code = req.body['code'];
+  const tokenRes = await fetch(process.env.DISCORD_API_ENDPOINT + '/oauth2/token', {
+    method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + discord_token,
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-  }).then((r) => r.json())
-    .then(async function(json) {
-      const discord_user = await prisma.DiscordUser.findUnique({
-        where: {
-          discord_id: json['id'],
+    body: new URLSearchParams({
+      client_id: process.env.DISCORD_CLIENT_ID,
+      client_secret: process.env.DISCORD_CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: process.env.DISCORD_REDIRECT_URI,
+    }).toString(),
+  });
+  if (!tokenRes.ok) {
+    res.status(400).json({message: 'Could not authenticate.'});
+    return;
+  }
+  tokenRes.json().then(
+    (json) => {
+      fetch(process.env.DISCORD_API_ENDPOINT + '/users/@me', {
+        headers: {
+          'Authorization': 'Bearer ' + json['access_token'],
         },
-        include: {
-          user: true,
-        }
-      });
-      let user = null;
-      if (discord_user) {
-        user = discord_user.user;
-      } else {
-        user = await prisma.user.create({
-          data: {
-            username: json['username'],
-            discord_user: {
-              create: {
-                discord_id: json['id'],
-                username: json['username'],
-                discriminator: json['discriminator'],
-                avatar: json['avatar'],
-              }
+      }).then((r) => r.json())
+        .then(async function (json) {
+          const discord_user = await prisma.DiscordUser.findUnique({
+            where: {
+              discord_id: json['id'],
             },
+            include: {
+              user: true,
+            }
+          });
+          let user = null;
+          if (discord_user) {
+            user = discord_user.user;
+          } else {
+            user = await prisma.user.create({
+              data: {
+                username: json['username'],
+                discord_user: {
+                  create: {
+                    discord_id: json['id'],
+                    username: json['username'],
+                    discriminator: json['discriminator'],
+                    avatar: json['avatar'],
+                  }
+                },
+              }
+            })
           }
-        })
-      }
-      res.json({
-        token: jwt.sign({user_id: user.id}),
-        username: user.username,
-        access_level: user['access_level'],
-      });
-    });
+          res.json({
+            token: jwt.sign({ user_id: user.id }),
+            username: user.username,
+            access_level: user['access_level'],
+          });
+        }
+      );
+    }
+  );
 });
 
 router.get('/auth/user', authMiddleware.requireAuthorized, async function(req, res) {

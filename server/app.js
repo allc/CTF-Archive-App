@@ -20,10 +20,12 @@ nunjucks_env.addFilter("date", function(date) {
 
 app.set("view engine", "njk")
 
-let corsOptions = {
+if (process.env['CORS_ORIGIN']) {
+  let corsOptions = {
     origin: process.env['CORS_ORIGIN']
-};
-app.use(cors(corsOptions));
+  };
+  app.use(cors(corsOptions));
+}
 
 app.use(logger('dev'));
 app.use(express.json());

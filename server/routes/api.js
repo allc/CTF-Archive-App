@@ -147,6 +147,23 @@ router.post('/challenges',
       res.status(400).json({message: 'Invalid name.'});
       return;
     }
+    // check if challenge exists in the ctf
+    // not atomic with creation of the challenge
+    // just for more informative error message
+    // model "unique" ensures data integrity
+    const exists = Boolean(await prisma.challenge.findFirst({
+      where: {
+        slug: challengeData.slug,
+        ctf: {
+          slug: req.body['ctf_slug']
+        }
+      }
+    }));
+    if (exists) {
+      res.status(400).json({message: 'Challenge exists for this CTF.'});
+      return;
+    }
+    // challenge data continue
     challengeData.description = normaliseString.normaliseOrNull(challengeData.description);
     challengeData.flag = normaliseString.normaliseOrNull(challengeData.flag);
     // category data

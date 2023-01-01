@@ -7,35 +7,16 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import FormErrorMessage from "./components/FormErrorMessage";
 import { formatDateStringOrNull } from "./utils/formatDateString";
+import { Stack } from "@mui/system";
 
 function CtfPage(props) {
   const { slug } = useParams();
   return (
-    <>
-      <div>
-        <Button href='/ctfs'><ArrowBackIcon />CTFs</Button>
-      </div>
-      <Ctf slug={slug} />
-      <Challenges user={props.user} ctfSlug={slug} />
-    </>
-  );
-}
-
-class Challenges extends React.Component {
-  render() {
-    return (
-      <div>
-        <AddChallenge user={this.props.user} ctfSlug={this.props.ctfSlug} />
-        <ChallengesDisplay />
-      </div>
-    )
-  }
-}
-
-function ChallengesDisplay(props) {
-  return (
     <div>
-      
+      <div>
+        <Button component={Link} to='/ctfs'><ArrowBackIcon />CTFs</Button>
+      </div>
+      <Ctf slug={slug} user={props.user} />
     </div>
   );
 }
@@ -204,21 +185,36 @@ class Ctf extends React.Component {
     super(props);
     this.state = {
       ctf: null,
+      challenges: [],
     };
   }
 
   componentDidMount() {
-    this.get_ctf();
+    this.getCtf();
+    this.updateChallenges();
   }
 
-  get_ctf() {
-    fetch(config.api_endpoint + '/ctfs/' + this.props.slug)
-      .then((res) => res.json())
-      .then((json) => {
-        this.setState({
-          ctf: json,
-        });
+  getCtf() {
+    fetch(
+      config.api_endpoint + '/ctfs/' + this.props.slug
+    ).then(
+      (res) => res.json()
+    ).then((json) => {
+      this.setState({
+        ctf: json,
       });
+    });
+  }
+
+  updateChallenges() {
+    fetch(config.api_endpoint + '/challenges/?ctf=' + this.props.slug
+    ).then(
+      (res) => res.json()
+    ).then((json) => {
+      this.setState({
+        challenges: json['challenges'],
+      });
+    });
   }
 
   render() {
@@ -233,24 +229,68 @@ class Ctf extends React.Component {
       }
       const start_date = formatDateStringOrNull(ctf.start_date);
       return (
-        <>
+        <div>
           <h1>{ ctf.name }</h1>
-          {ctf.start_date &&
-            <div>Start date: {start_date}</div>
-          }
           <div>
-            {ctf.link &&
-              <Button href={ctf.link}>Link</Button>
+            {ctf.start_date &&
+              <div>Start date: {start_date}</div>
             }
-            {ctf.ctftime_link &&
-              <Button href={ctf.ctftime_link}>On CTFtime</Button>
-            }
+            <div>
+              {ctf.link &&
+                <Button href={ctf.link}>Link</Button>
+              }
+              {ctf.ctftime_link &&
+                <Button href={ctf.ctftime_link}>On CTFtime</Button>
+              }
+            </div>
+            <div dangerouslySetInnerHTML={more_info_html}></div>
           </div>
-          <div dangerouslySetInnerHTML={more_info_html}></div>
-        </>
+          <AddChallenge user={this.props.user} ctfSlug={this.props.slug} />
+          <div>
+            <ChallengeTable challenges={this.state.challenges} slug={this.props.slug} />
+          </div>
+        </div>
       );
     }
   }
+}
+
+function ChallengeTable(props) {
+  return (
+    <TableContainer>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Challenge</TableCell>
+            <TableCell>Category</TableCell>
+            <TableCell>Tags</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {props.challenges.map((challenge) => (
+            <ChallengeTableRow key={challenge.slug} challenge={challenge} />
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  )
+}
+
+function ChallengeTableRow(props) {
+  const challengeLinkTo = '/ctfs/' + props.challenge.ctf.slug + '/' + props.challenge.slug;
+  return (
+    <TableRow>
+      <TableCell><Link to={challengeLinkTo}>{props.challenge.name}</Link></TableCell>
+      <TableCell>{props.challenge.category.name}</TableCell>
+      <TableCell>
+        <Stack direction="row" spacing={1}>
+          {props.challenge.tags.map((tag) => (
+            <Chip key={tag.slug} label={tag.name} variant="outlined" />
+          ))}
+        </Stack>
+      </TableCell>
+    </TableRow>
+  )
 }
 
 export default CtfPage;

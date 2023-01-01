@@ -12,14 +12,14 @@ class Ctfs extends React.Component {
     this.state = {
       ctfs: [],
     };
-    this.update_ctfs = this.update_ctfs.bind(this);
+    this.updateCtfs = this.updateCtfs.bind(this);
   }
 
   componentDidMount() {
-    this.update_ctfs();
+    this.updateCtfs();
   }
 
-  update_ctfs() {
+  updateCtfs() {
     fetch(config.api_endpoint + '/ctfs').then(
       (res) => res.json()
     ).then((json) => {
@@ -33,7 +33,7 @@ class Ctfs extends React.Component {
     return (
       <div>
         <h1>CTFs</h1>
-        <AddCtf user={this.props.user} update_ctfs={this.update_ctfs} />
+        <AddCtf user={this.props.user} updateCtfs={this.updateCtfs} />
         <CtfsTable ctfs={this.state.ctfs} />
       </div>
     );
@@ -121,7 +121,7 @@ class AddCtf extends React.Component {
           adding_ctf: false,
           add_ctf_error: null,
         });
-        this.props.update_ctfs();
+        this.props.updateCtfs();
       } else {
         this.setState({
           add_ctf_error: json.message,

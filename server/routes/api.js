@@ -94,13 +94,16 @@ router.get('/ctfs/:ctf_slug', async function(req, res) {
 });
 
 router.get('/challenges', async function(req, res) {
-  let ctfString = req.query.ctf;
-  ctfString = (ctfString) ? ctfString : undefined;
+  let ctfSlug = req.query.ctf;
+  ctfSlug = (ctfSlug) ? ctfSlug : undefined;
+  let challengeSlug = req.query.challenge;
+  challengeSlug = (challengeSlug) ? challengeSlug : undefined;
   const challenges = await prisma.challenge.findMany({
     where: {
       ctf: {
-        slug: ctfString,
-      }
+        slug: ctfSlug,
+      },
+      slug: challengeSlug,
     },
     select: {
       id: true,
@@ -227,6 +230,41 @@ router.post('/challenges',
     res.json({message: 'Success.'});
   }
 );
+
+router.get('/challenges/:id', async function(req, res) {
+  const id = parseInt(req.params.id);
+  const challenge = await prisma.challenge.findUnique({
+    where: {
+      id: id,
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      ctf: {
+        select: {
+          name: true,
+          slug: true,
+        }
+      },
+      category: {
+        select: {
+          name: true,
+          slug: true,
+        }
+      },
+      description: true,
+      flag: true,
+      tags: {
+        select: {
+          name: true,
+          slug: true,
+        }
+      }
+    }
+  });
+  res.json(challenge);
+});
 
 router.get('/categories', async function(req, res) {
   const categories = await prisma.category.findMany({

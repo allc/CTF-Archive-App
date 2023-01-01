@@ -138,6 +138,7 @@ class AddChallenge extends React.Component {
           adding_challenge: false,
           add_challenge_error: null,
         });
+        this.updateChallenges();
       } else {
         this.setState({
           add_challenge_error: json.message,

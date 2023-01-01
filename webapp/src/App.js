@@ -5,6 +5,7 @@ import TopBar from './components/TopBar';
 import DiscordAuth from './DiscordAuth';
 import React from 'react';
 import { createTheme, ThemeProvider } from '@mui/material';
+import ChallengePage from './Challenge';
 
 class App extends React.Component {
   constructor(props) {
@@ -32,6 +33,7 @@ class App extends React.Component {
           <Routes>
             <Route path='/ctfs' element={<Ctfs user={this.state.user}/>} />
             <Route path='/ctfs/:slug' element={<CtfPage user={this.state.user} />}/>
+            <Route path='/ctfs/:ctfSlug/:challengeSlug' element={<ChallengePage user={this.state.user} />}/>
             <Route path='/auth/discord' element={<DiscordAuth setUser={this.setUser} />} />
           </Routes>
         </Router>

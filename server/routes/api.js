@@ -5,7 +5,7 @@ const jwt = require('../helpers/jwt');
 const authMiddleware = require('../middlewares/auth');
 const normaliseString = require('../helpers/normaliseString');
 const checkUrl = require('../helpers/checkUrl');
-const { fetch } = require('node-fetch');
+const { default: fetch } = require('node-fetch');
 
 const prisma = new PrismaClient()
 

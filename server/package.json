@@ -6,7 +6,7 @@
     "start": "node ./bin/www"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=17.5.0"
   },
   "dependencies": {
     "@prisma/client": "^4.8.0",

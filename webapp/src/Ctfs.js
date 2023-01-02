@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { config } from "./config";
 import FormErrorMessage from "./components/FormErrorMessage";
-import { formatDateString, formatDateStringOrNull } from "./utils/formatDateString";
+import { formatDateStringOrNull } from "./utils/formatDateString";
 
 class Ctfs extends React.Component {
   constructor(props) {
